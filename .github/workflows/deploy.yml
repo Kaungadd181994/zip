@@ -1,0 +1,48 @@
+name: Extract ZIP and Deploy to Pages
+
+on:
+  push:
+    branches:
+      - main  # Triggers when you push to the main branch
+  workflow_dispatch: # Allows you to trigger the workflow manually from the Actions tab
+
+# Permissions required for deploying to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment to avoid conflicts
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract ZIP File
+        run: |
+          # 🚨 CHANGE 'your-file.zip' to the actual name of your zip file in the repo
+          # This extracts the zip into a folder called 'extracted-site'
+          unzip your-file.zip -d ./extracted-site
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Build Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Point this to the folder where you extracted your zip
+          path: './extracted-site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        

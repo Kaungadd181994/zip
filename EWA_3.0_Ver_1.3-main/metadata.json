@@ -1,0 +1,6 @@
+{
+  "name": "EWA 3.0 Platform UI",
+  "description": "A comprehensive and configurable Earned Wage Access (EWA) standalone management platform dashboard featuring Circle Ledger double-entry financial reporting, advanced operational workflows, risk credit assessment, and dynamic Form Creator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

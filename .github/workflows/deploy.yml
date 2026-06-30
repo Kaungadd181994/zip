@@ -3,16 +3,14 @@ name: Extract ZIP and Deploy to Pages
 on:
   push:
     branches:
-      - main  # Triggers when you push to the main branch
-  workflow_dispatch: # Allows you to trigger the workflow manually from the Actions tab
+      - main
+  workflow_dispatch:
 
-# Permissions required for deploying to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment to avoid conflicts
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -27,11 +25,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Extract ZIP File
+      - name: Auto-Detect and Extract ZIP
         run: |
-          # 🚨 CHANGE 'your-file.zip' to the actual name of your zip file in the repo
-          # This extracts the zip into a folder called 'extracted-site'
-          unzip your-file.zip -d ./extracted-site
+          # 1. Dynamically find ANY zip file name
+          ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
+          
+          if [ -z "$ZIP_FILE" ]; then
+            echo "❌ ERROR: No .zip file found in the root directory!"
+            exit 1
+          fi
+          
+          echo "📦 Found ZIP file: $ZIP_FILE"
+          mkdir -p ./extracted-site
+          unzip "$ZIP_FILE" -d ./extracted-site
+          
+          # 2. Safety check: Fixes nested folder structures automatically
+          if [ ! -f ./extracted-site/index.html ]; then
+            SUBDIR=$(find ./extracted-site -maxdepth 1 -mindepth 1 -type d | head -n 1)
+            if [ -n "$SUBDIR" ] && [ -f "$SUBDIR/index.html" ]; then
+              echo "⚠️ Nested folder detected. Moving files to root..."
+              mv "$SUBDIR"/* ./extracted-site/
+            fi
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -39,10 +54,8 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Point this to the folder where you extracted your zip
           path: './extracted-site'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
